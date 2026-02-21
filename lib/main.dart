@@ -1,10 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'package:homelibrary/screen/Home.dart';
 import 'package:homelibrary/screen/Library.dart';
 import 'package:homelibrary/screen/Settings.dart';
 
-void main() => runApp(const NavigationBarApp());
+Future<void> main() async {
+  // Flutter 엔진과 위젯 바인딩을 초기화합니다.
+  WidgetsFlutterBinding.ensureInitialized();
+  // .env 파일을 로드하여 환경 변수를 설정합니다.
+  await dotenv.load(fileName: ".env");
+  runApp(const NavigationBarApp());
+}
 
 class NavigationBarApp extends StatelessWidget {
   const NavigationBarApp({super.key});
@@ -27,7 +34,6 @@ class _NavigationExampleState extends State<NavigationExample> {
 
   @override
   Widget build(BuildContext context) {
-    final ThemeData theme = Theme.of(context);
     return Scaffold(
       bottomNavigationBar: NavigationBar(
         onDestinationSelected: (int index) {
