@@ -29,34 +29,43 @@ class _BarcodeState extends State<Barcode> {
       return;
     }
 
-    // 새 검색 전에 이전 결과와 오류를 초기화합니다.
+    // 새 검색 전에 이전 결과와 오류를 초기화
     setState(() {
       _item = null;
       _error = '';
     });
 
     try {
-      final serviceKey = dotenv.env["API_KEY"];
-      // 포스트맨에서 확인된 올바른 API 주소와 파라미터로 수정
-      final uri = Uri.parse('https://www.nl.go.kr/seoji/SearchApi.do?cert_key=$serviceKey&result_style=json&page_no=1&page_size=10&result_style=json&isbn=$text');
+      final clientId = dotenv.env["CLIENT_ID"];
+      final clientSecret = dotenv.env["CLIENT_SECRET"];
 
-      final res = await http.get(uri);
+      if (clientId == null || clientSecret == null) {
+        setState(() {
+            _error = 'API 키를 .env 파일에서 찾을 수 없습니다.';
+        });
+        return;
+      }
+
+      final uri = Uri.parse('https://openapi.naver.com/v1/search/book.json?query=$text&display=1');
+
+      final res = await http.get(uri, headers: {
+        'X-Naver-Client-Id': clientId,
+        'X-Naver-Client-Secret': clientSecret
+      });
       
       if (res.statusCode == 200) {
         try {
-          // API는 UTF-8로 인코딩되어 있으므로 디코딩을 명시해줍니다.
           final Map<String, dynamic> json = jsonDecode(utf8.decode(res.bodyBytes));
 
-          final docs = json['docs'] as List<dynamic>?;
-          if (json['TOTAL_COUNT'] == 0 || docs == null || docs.isEmpty) {
+          final items = json['items'] as List<dynamic>?;
+          if (json['total'] == 0 || items == null || items.isEmpty) {
             setState(() {
               _error = '책 정보를 찾을 수 없습니다.';
             });
             return;
           }
 
-          final Map<String, dynamic> item = docs.first as Map<String, dynamic>;
-
+          final Map<String, dynamic> item = items.first as Map<String, dynamic>;
 
           setState(() {
             _item = item;
@@ -68,7 +77,7 @@ class _BarcodeState extends State<Barcode> {
         }
       } else {
         setState(() {
-          _error = '서버 오류 : ${res.statusCode}';
+          _error = '서버 오류 : ${res.statusCode}\n${res.body}';
         });
       }
     } catch (e) {
@@ -83,13 +92,13 @@ class _BarcodeState extends State<Barcode> {
   Widget build(BuildContext context) {
     // 스캔 영역 설정
     final scanWindow = Rect.fromCenter(
-      center: MediaQuery.of(context).size.center(const Offset(0, -50)), // 스캔 창을 약간 위로 이동
+      center: MediaQuery.of(context).size.center(const Offset(0, -50)),
       width: 250,
       height: 200,
     );
 
     return Scaffold(
-      appBar: AppBar(title: const Text('QR Scan')),
+      appBar: AppBar(title: const Text('바코드 스캔')),
       body: Stack(
         children: [
           // 바코드 스캔 위젯
@@ -140,10 +149,10 @@ class _BarcodeState extends State<Barcode> {
 
                 if (_item != null) {
                   final item = _item!;
-                  // 'seoji' API의 필드 이름에 맞게 수정
-                  final imageUrl = item['COVER_URL'] ?? '';
-                  final title = item['TITLE'] ?? '제목 없음';
-                  final author = item['AUTHOR'] ?? '저자 없음';
+                  // 네이버 API 필드 이름에 맞게 수정
+                  final imageUrl = item['image'] ?? '';
+                  final title = item['title'] ?? '제목 없음';
+                  final author = item['author'] ?? '저자 없음';
 
                   showDialog(
                     context: context,
@@ -214,9 +223,8 @@ class ScannerOverlay extends CustomPainter {
     final backgroundPath = Path()..addRect(Rect.largest);
     final cutoutPath = Path()..addRect(scanWindow);
 
-    // 스캔 영역을 제외한 배경을 어둡게
     final backgroundPaint = Paint()
-      ..color = Colors.black.withValues(alpha: 0.5)
+      ..color = Colors.black.withOpacity(0.5)
       ..style = PaintingStyle.fill
       ..blendMode = BlendMode.dstOut;
 
@@ -226,21 +234,18 @@ class ScannerOverlay extends CustomPainter {
       cutoutPath,
     );
 
-    // 스캔 영역의 테두리를 그리기
     final borderPaint = Paint()
       ..color = Colors.white
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.0;
 
-    // 스캔 영역 중앙의 빨간 선을 그리기
     final linePaint = Paint()
       ..color = Colors.red
       ..strokeWidth = 2.0;
 
-    canvas.drawPath(backgroundWithCutout, backgroundPaint); // 어두운 배경 그리기
-    canvas.drawRect(scanWindow, borderPaint); // 테두리 그리기
+    canvas.drawPath(backgroundWithCutout, backgroundPaint);
+    canvas.drawRect(scanWindow, borderPaint);
 
-    // 중앙의 빨간 선 그리기
     canvas.drawLine(
       Offset(scanWindow.left, scanWindow.center.dy),
       Offset(scanWindow.right, scanWindow.center.dy),

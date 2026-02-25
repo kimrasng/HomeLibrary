@@ -6,9 +6,7 @@ import 'package:homelibrary/screen/Library.dart';
 import 'package:homelibrary/screen/Settings.dart';
 
 Future<void> main() async {
-  // Flutter 엔진과 위젯 바인딩을 초기화합니다.
   WidgetsFlutterBinding.ensureInitialized();
-  // .env 파일을 로드하여 환경 변수를 설정합니다.
   await dotenv.load(fileName: ".env");
   runApp(const NavigationBarApp());
 }

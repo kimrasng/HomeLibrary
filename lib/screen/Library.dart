@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:homelibrary/screen/component/barcode.dart';
+import 'package:homelibrary/screen/component/add_dialog.dart';
 
 class Library extends StatelessWidget {
   const Library({super.key});
@@ -11,13 +11,7 @@ class Library extends StatelessWidget {
         title: const Text("책 관리"),
         actions: [
           IconButton(
-            onPressed: () {
-              Navigator.push(
-                  context,
-                  MaterialPageRoute<void>(
-                    builder: (context) => const Barcode(),
-                  ));
-            },
+            onPressed: () async { await showDialog(context: context, builder: (context) => AddDialog());},
             icon: const Icon(Icons.add),
           ),
           IconButton(onPressed: () {}, icon: const Icon(Icons.search)),
