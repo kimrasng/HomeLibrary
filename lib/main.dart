@@ -42,8 +42,8 @@ class _NavigationExampleState extends State<NavigationExample> {
         selectedIndex: currentPageIndex,
         destinations: const <Widget>[
           NavigationDestination(
-            icon: Icon(Icons.menu_book_outlined),
-            label: '책 목록',
+            icon: Icon(Icons.bookmarks_rounded),
+            label: '서재',
           ),
           NavigationDestination(
             selectedIcon: Icon(Icons.home),

@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:homelibrary/screen/component/barcode.dart';
 import 'package:homelibrary/screen/component/addmanually.dart';
 
-class AddDialog extends StatefulWidget {
-  const AddDialog({super.key});
+class AddbookDialog extends StatefulWidget {
+  const AddbookDialog({super.key});
 
   @override
-  State<AddDialog> createState() => _AddDialogState();
+  State<AddbookDialog> createState() => _AddbookDialogState();
 }
 
-class _AddDialogState extends State<AddDialog> {
+class _AddbookDialogState extends State<AddbookDialog> {
 
   @override
   Widget build(BuildContext context) {
