@@ -1,23 +1,23 @@
-class Library {
+class LibraryModle {
   static int _nextid = 0;
 
   final int id;
   final String name;
   final String location;
-  final List<BookItem> books;
+  final List<BookItemModel> books;
 
-  Library({
+  LibraryModle({
     int? id,
     required this.name,
     required this.location,
     required this.books
   }) : id = id ?? _nextid++;
 
-  factory Library.fromJson(Map<String, dynamic> json) => Library(
+  factory LibraryModle.fromJson(Map<String, dynamic> json) => LibraryModle(
       id: json['id'],
       name: json['name'],
       location: json['location'],
-      books: (json['books'] as List).map<BookItem>((e) => BookItem.fromJson(e)).toList(),
+      books: (json['books'] as List).map<BookItemModel>((e) => BookItemModel.fromJson(e)).toList(),
   );
 
   Map<String, dynamic> toJson() => {
@@ -28,7 +28,7 @@ class Library {
   };
 }
 
-class BookItem {
+class BookItemModel {
   static int _nextId = 0;
   final int id;
   final String title;
@@ -37,7 +37,7 @@ class BookItem {
   final String? description;
   final String? coverUrl;
 
-  BookItem({
+  BookItemModel({
     int? id,
     required this.title,
     required this.author,
@@ -46,7 +46,7 @@ class BookItem {
     this.coverUrl,
   }) : id = id ?? _nextId++;
 
-  factory BookItem.fromJson(Map<String, dynamic> json) => BookItem(
+  factory BookItemModel.fromJson(Map<String, dynamic> json) => BookItemModel(
     id: json['id'],
     title: json['title'],
     author: json['author'],
