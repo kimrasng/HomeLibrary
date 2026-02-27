@@ -3,7 +3,9 @@ import 'package:homelibrary/model/Library.dart';
 import 'package:homelibrary/controller/controller.dart';
 
 class AddlibraryDialog extends StatefulWidget {
-  const AddlibraryDialog({super.key});
+  final LibraryModle? library;
+
+  const AddlibraryDialog({super.key, this.library});
 
   @override
   State<AddlibraryDialog> createState() => _AddlibraryDialogState();
@@ -11,57 +13,80 @@ class AddlibraryDialog extends StatefulWidget {
 
 class _AddlibraryDialogState extends State<AddlibraryDialog> {
   final LibraryController _controller = LibraryController();
-  String name = '';
-  String location = '';
+  late TextEditingController _nameController;
+  late TextEditingController _locationController;
 
-  Future<void> _addLibrary() async {
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController(text: widget.library?.name ?? '');
+    _locationController = TextEditingController(text: widget.library?.location ?? '');
+  }
+
+  Future<void> _addOrUpdateLibrary() async {
+    final name = _nameController.text;
+    final location = _locationController.text;
+
     if (name.isNotEmpty && location.isNotEmpty) {
-      final newLibrary = LibraryModle(name: name, location: location, books: []);
-      await _controller.addLibrary(newLibrary);
-      Navigator.of(context).pop();
+      if (widget.library != null) {
+        final updatedLibrary = LibraryModle(
+          id: widget.library!.id,
+          name: name,
+          location: location,
+          books: widget.library!.books,
+        );
+        await _controller.updateLibrary(updatedLibrary);
+      } else {
+        final newLibrary = LibraryModle(name: name, location: location, books: []);
+        await _controller.addLibrary(newLibrary);
+      }
+      Navigator.of(context).pop(true);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text("서재 추가"),
+      title: Text(widget.library == null ? "서재 추가" : "서재 수정"),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           TextField(
+            controller: _nameController,
             decoration: const InputDecoration(
               labelText: "서재 이름",
               border: OutlineInputBorder(),
             ),
-            onChanged: (value) => setState(() {
-              name = value;
-            }),
           ),
           const SizedBox(height: 20),
           TextField(
+            controller: _locationController,
             decoration: const InputDecoration(
               labelText: "서재 위치",
               border: OutlineInputBorder(),
             ),
-            onChanged: (value) => setState(() {
-              location = value;
-            }),
           ),
         ],
       ),
       actions: [
         TextButton(
           onPressed: () {
-            Navigator.of(context).pop();
+            Navigator.of(context).pop(false);
           },
           child: const Text('취소'),
         ),
         TextButton(
-          onPressed: _addLibrary,
-          child: const Text('추가'),
+          onPressed: _addOrUpdateLibrary,
+          child: Text(widget.library == null ? '추가' : '수정'),
         ),
       ],
     );
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _locationController.dispose();
+    super.dispose();
   }
 }

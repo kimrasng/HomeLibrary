@@ -1,6 +1,4 @@
 class LibraryModle {
-  static int _nextid = 0;
-
   final int id;
   final String name;
   final String location;
@@ -10,26 +8,25 @@ class LibraryModle {
     int? id,
     required this.name,
     required this.location,
-    required this.books
-  }) : id = id ?? _nextid++;
+    required this.books,
+  }) : id = id ?? DateTime.now().millisecondsSinceEpoch;
 
   factory LibraryModle.fromJson(Map<String, dynamic> json) => LibraryModle(
-      id: json['id'],
-      name: json['name'],
-      location: json['location'],
-      books: (json['books'] as List).map<BookItemModel>((e) => BookItemModel.fromJson(e)).toList(),
+    id: json['id'],
+    name: json['name'],
+    location: json['location'],
+    books: (json['books'] as List).map<BookItemModel>((e) => BookItemModel.fromJson(e)).toList(),
   );
 
   Map<String, dynamic> toJson() => {
     'id': id,
-    'name' : name,
+    'name': name,
     'location': location,
-    'books' : books.map((e) => e.toJson()).toList(),
+    'books': books.map((e) => e.toJson()).toList(),
   };
 }
 
 class BookItemModel {
-  static int _nextId = 0;
   final int id;
   final String title;
   final String author;
@@ -44,7 +41,7 @@ class BookItemModel {
     this.isbn,
     this.description,
     this.coverUrl,
-  }) : id = id ?? _nextId++;
+  }) : id = id ?? DateTime.now().millisecondsSinceEpoch;
 
   factory BookItemModel.fromJson(Map<String, dynamic> json) => BookItemModel(
     id: json['id'],

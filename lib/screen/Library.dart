@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:homelibrary/model/Library.dart';
 import 'package:homelibrary/screen/component/addlibrary_dialog.dart';
 import 'package:homelibrary/controller/controller.dart';
+import 'package:homelibrary/screen/component/library_cupertino.dart';
 
 class Library extends StatefulWidget {
   const Library({super.key});
@@ -34,11 +35,14 @@ class _LibraryState extends State<Library> {
         actions: [
           IconButton(
             onPressed: () async {
-              await showDialog(
+              final result = await showDialog<bool>(
                 context: context,
                 builder: (context) => const AddlibraryDialog(),
               );
-              _refreshLibraries();
+
+              if (result == true) {
+                _refreshLibraries();
+              }
             },
             icon: const Icon(Icons.add),
           ),
@@ -55,7 +59,7 @@ class _LibraryState extends State<Library> {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         } else if (snapshot.hasError) {
-          return Center(child: Text('오류! \${snapshot.error}'));
+          return Center(child: Text('오류! ${snapshot.error}'));
         } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
           return const Center(child: Text('서재를 추가해주세요.'));
         }
@@ -69,8 +73,32 @@ class _LibraryState extends State<Library> {
               child: ListTile(
                 title: Text(library.name),
                 subtitle: Text(library.location),
-                trailing: IconButton(onPressed: (){}, icon: Icon(Icons.more_vert),),
-                onTap: (){},
+                trailing: IconButton(
+                  icon: const Icon(Icons.more_vert),
+                  onPressed: () {
+                    LibraryCupertino.showActionSheet(
+                      context,
+                      library,
+                      onDelete: () async {
+                        await _controller.deleteLibrary(library.id);
+                        _refreshLibraries();
+                      },
+                      onRename: () async {
+                        final result = await showDialog<bool>(
+                          context: context,
+                          builder: (context) => AddlibraryDialog(library: library),
+                        );
+                        if (result == true) {
+                          _refreshLibraries();
+                        }
+                      },
+                    );
+                  },
+                ),
+                onTap: (){
+                  // ToDo : 책 페이지 (책 목록있고 추가하는 페이지)
+                  // Navigator.push(context, )
+                },
               ),
             );
           },

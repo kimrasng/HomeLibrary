@@ -31,6 +31,21 @@ class LibraryController {
     await saveLibraries(libraries);
   }
 
+  Future<void> updateLibrary(LibraryModle updatedLibrary) async {
+    final libraries = await loadLibraries();
+    final libraryIndex = libraries.indexWhere((lib) => lib.id == updatedLibrary.id);
+    if (libraryIndex != -1) {
+      libraries[libraryIndex] = updatedLibrary;
+      await saveLibraries(libraries);
+    }
+  }
+
+  Future<void> deleteLibrary(int libraryId) async {
+    final libraries = await loadLibraries();
+    libraries.removeWhere((lib) => lib.id == libraryId);
+    await saveLibraries(libraries);
+  }
+
   Future<void> addBook(int libraryId, BookItemModel book) async {
     final libraries = await loadLibraries();
     final libraryIndex = libraries.indexWhere((lib) => lib.id == libraryId);

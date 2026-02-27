@@ -48,8 +48,8 @@ class _AddmanuallyState extends State<Addmanually> {
     });
 
     try {
-      final clientId = dotenv.env["CLIENT_ID"];
-      final clientSecret = dotenv.env["CLIENT_SECRET"];
+      final clientId = dotenv.env["N_CLIENT_ID"];
+      final clientSecret = dotenv.env["N_CLIENT_SECRET"];
 
       if (clientId == null || clientSecret == null) {
         setState(() {
