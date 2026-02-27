@@ -3,6 +3,7 @@ import 'package:homelibrary/model/Library.dart';
 import 'package:homelibrary/screen/component/addlibrary_dialog.dart';
 import 'package:homelibrary/controller/controller.dart';
 import 'package:homelibrary/screen/component/library_cupertino.dart';
+import 'package:homelibrary/screen/book.dart';
 
 class Library extends StatefulWidget {
   const Library({super.key});
@@ -96,8 +97,7 @@ class _LibraryState extends State<Library> {
                   },
                 ),
                 onTap: (){
-                  // ToDo : 책 페이지 (책 목록있고 추가하는 페이지)
-                  // Navigator.push(context, )
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => const Book()));
                 },
               ),
             );

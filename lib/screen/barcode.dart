@@ -136,8 +136,8 @@ class _BarcodeState extends State<Barcode> {
                       actions: [
                         TextButton(
                           onPressed: () {
-                            Navigator.of(context).pop();
                             _controller.start();
+                            Navigator.of(context).pop();
                           },
                           child: const Text('확인'),
                         )
@@ -178,15 +178,15 @@ class _BarcodeState extends State<Barcode> {
                           TextButton(
                             child: const Text('아니요'),
                             onPressed: () {
-                              Navigator.of(context).pop(); // 팝업 닫기
-                              _controller.start(); // 스캔 다시 시작
+                              _controller.start();
+                              Navigator.of(context).pop();
                             },
                           ),
                           TextButton(
                             child: const Text('네'),
                             onPressed: () {
-                              Navigator.of(context).pop(); // 팝업 닫기
-                              Navigator.of(context).pop(item); // 이전 화면으로 책 데이터와 함께 돌아가기
+                              Navigator.of(context).pop();
+                              Navigator.of(context).pop(item);
                             },
                           ),
                         ],

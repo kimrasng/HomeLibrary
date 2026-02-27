@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:homelibrary/screen/component/barcode.dart';
-import 'package:homelibrary/screen/component/addmanually.dart';
+import 'package:homelibrary/screen/barcode.dart';
+import 'package:homelibrary/screen/addmanually.dart';
 
 class AddbookDialog extends StatefulWidget {
   const AddbookDialog({super.key});
