@@ -17,7 +17,6 @@ class _BarcodeState extends State<Barcode> {
   Map<String, dynamic>? _item;
   String _error = '';
 
-  // mobile_scanner 컨트롤러
   final MobileScannerController _controller = MobileScannerController();
 
   Future<void> _ISBNSearch(String text) async {
@@ -29,7 +28,6 @@ class _BarcodeState extends State<Barcode> {
       return;
     }
 
-    // 새 검색 전에 이전 결과와 오류를 초기화
     setState(() {
       _item = null;
       _error = '';
@@ -90,7 +88,6 @@ class _BarcodeState extends State<Barcode> {
 
   @override
   Widget build(BuildContext context) {
-    // 스캔 영역 설정
     final scanWindow = Rect.fromCenter(
       center: MediaQuery.of(context).size.center(const Offset(0, -50)),
       width: 250,
@@ -101,22 +98,20 @@ class _BarcodeState extends State<Barcode> {
       appBar: AppBar(title: const Text('바코드 스캔')),
       body: Stack(
         children: [
-          // 바코드 스캔 위젯
           MobileScanner(
-            controller: _controller, // 컨트롤러 연결
-            scanWindow: scanWindow, // 스캔 영역 지정
-            onDetect: (capture) async { // 바코드 감지하면 실행 (async로 변경)
+            controller: _controller,
+            scanWindow: scanWindow,
+            onDetect: (capture) async {
               final barcodes = capture.barcodes;
               if (barcodes.isNotEmpty) {
-                _controller.stop(); // 바코드 감지하면 스캔 중지
-                final barcodeValue = barcodes.first.rawValue; // 감지된 바코드 값
+                _controller.stop();
+                final barcodeValue = barcodes.first.rawValue;
 
                 if (barcodeValue == null) {
                   _controller.start();
                   return;
                 }
 
-                // 로딩 다이얼로그 표시
                 showDialog(
                   context: context,
                   barrierDismissible: false,
@@ -127,6 +122,8 @@ class _BarcodeState extends State<Barcode> {
 
                 Navigator.of(context).pop(); // 로딩 다이얼로그 닫기
 
+                if (!mounted) return;
+
                 if (_error.isNotEmpty) {
                   showDialog(
                     context: context,
@@ -136,8 +133,8 @@ class _BarcodeState extends State<Barcode> {
                       actions: [
                         TextButton(
                           onPressed: () {
-                            _controller.start();
                             Navigator.of(context).pop();
+                            _controller.start();
                           },
                           child: const Text('확인'),
                         )
@@ -149,15 +146,14 @@ class _BarcodeState extends State<Barcode> {
 
                 if (_item != null) {
                   final item = _item!;
-                  // 네이버 API 필드 이름에 맞게 수정
                   final imageUrl = item['image'] ?? '';
-                  final title = item['title'] ?? '제목 없음';
-                  final author = item['author'] ?? '저자 없음';
+                  final title = item['title']?.replaceAll(RegExp(r'<[^>]*>|&[^;]+;'), ' ') ?? '제목 없음';
+                  final author = item['author']?.replaceAll(RegExp(r'<[^>]*>|&[^;]+;'), ' ') ?? '저자 없음';
 
-                  showDialog(
+                  final dialogResult = await showDialog<Map<String, dynamic>>(
                     context: context,
-                    barrierDismissible: false, // 팝업 영역 이외의 공간 눌러도 닫히는거 방지
-                    builder: (context) {
+                    barrierDismissible: false,
+                    builder: (dialogContext) {
                       return AlertDialog(
                         title: const Text('이 책이 맞나요?'),
                         content: SingleChildScrollView(
@@ -178,26 +174,31 @@ class _BarcodeState extends State<Barcode> {
                           TextButton(
                             child: const Text('아니요'),
                             onPressed: () {
-                              _controller.start();
-                              Navigator.of(context).pop();
+                              Navigator.of(dialogContext).pop();
                             },
                           ),
                           TextButton(
                             child: const Text('네'),
                             onPressed: () {
-                              Navigator.of(context).pop();
-                              Navigator.of(context).pop(item);
+                              Navigator.of(dialogContext).pop(item);
                             },
                           ),
                         ],
                       );
                     },
                   );
+
+                  if (!mounted) return;
+
+                  if (dialogResult != null) {
+                    Navigator.of(context).pop(dialogResult);
+                  } else {
+                    _controller.start();
+                  }
                 }
               }
             },
           ),
-          // 스캐너 위에 겹쳐서 보여줄 UI
           CustomPaint(
             painter: ScannerOverlay(scanWindow),
           ),

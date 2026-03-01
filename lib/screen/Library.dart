@@ -97,7 +97,7 @@ class _LibraryState extends State<Library> {
                   },
                 ),
                 onTap: (){
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => const Book()));
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => Book(library: library)));
                 },
               ),
             );

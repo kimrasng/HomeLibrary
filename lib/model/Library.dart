@@ -33,6 +33,7 @@ class BookItemModel {
   final String? isbn;
   final String? description;
   final String? coverUrl;
+  final String? detailUrl;
 
   BookItemModel({
     int? id,
@@ -41,6 +42,7 @@ class BookItemModel {
     this.isbn,
     this.description,
     this.coverUrl,
+    this.detailUrl,
   }) : id = id ?? DateTime.now().millisecondsSinceEpoch;
 
   factory BookItemModel.fromJson(Map<String, dynamic> json) => BookItemModel(
@@ -50,6 +52,7 @@ class BookItemModel {
     isbn: json['isbn'],
     description: json['description'],
     coverUrl: json['coverUrl'],
+    detailUrl: json['detailUrl'],
   );
 
   Map<String, dynamic> toJson() => {
@@ -59,5 +62,6 @@ class BookItemModel {
     'isbn': isbn,
     'description': description,
     'coverUrl': coverUrl,
+    'detailUrl': detailUrl,
   };
 }
