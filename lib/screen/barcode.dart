@@ -19,8 +19,8 @@ class _BarcodeState extends State<Barcode> {
 
   final MobileScannerController _controller = MobileScannerController();
 
-  Future<void> _ISBNSearch(String text) async {
-    if (text.isEmpty) {
+  Future<void> _ISBNSearch(String isbn) async {
+    if (isbn.isEmpty) {
       setState(() {
         _item = null;
         _error = '';
@@ -34,48 +34,36 @@ class _BarcodeState extends State<Barcode> {
     });
 
     try {
-      final clientId = dotenv.env["CLIENT_ID"];
-      final clientSecret = dotenv.env["CLIENT_SECRET"];
-
-      if (clientId == null || clientSecret == null) {
+      final restApiKey = dotenv.env["REST_API_KEY"];
+      if (restApiKey == null) {
         setState(() {
-            _error = 'API 키를 .env 파일에서 찾을 수 없습니다.';
+          _error = 'API 키를 찾을 수 없습니다.';
         });
         return;
       }
 
-      final uri = Uri.parse('https://openapi.naver.com/v1/search/book.json?query=$text&display=1');
-
+      final uri = Uri.parse('https://dapi.kakao.com/v3/search/book?query=$isbn&target=isbn');
       final res = await http.get(uri, headers: {
-        'X-Naver-Client-Id': clientId,
-        'X-Naver-Client-Secret': clientSecret
+        'Authorization': 'KakaoAK $restApiKey',
       });
       
       if (res.statusCode == 200) {
-        try {
-          final Map<String, dynamic> json = jsonDecode(utf8.decode(res.bodyBytes));
+        final Map<String, dynamic> json = jsonDecode(utf8.decode(res.bodyBytes));
+        final items = json['documents'] as List<dynamic>?;
 
-          final items = json['items'] as List<dynamic>?;
-          if (json['total'] == 0 || items == null || items.isEmpty) {
-            setState(() {
-              _error = '책 정보를 찾을 수 없습니다.';
-            });
-            return;
-          }
-
-          final Map<String, dynamic> item = items.first as Map<String, dynamic>;
-
+        if (items == null || items.isEmpty) {
           setState(() {
-            _item = item;
+            _error = '책 정보를 찾을 수 없습니다.';
           });
-        } on FormatException {
-            setState(() {
-              _error = 'API 응답을 파싱하는데 실패했습니다. 응답: ${res.body}';
-            });
+          return;
         }
+
+        setState(() {
+          _item = items.first as Map<String, dynamic>;
+        });
       } else {
         setState(() {
-          _error = '서버 오류 : ${res.statusCode}\n${res.body}';
+          _error = '서버 오류 : ${res.statusCode}';
         });
       }
     } catch (e) {
@@ -120,7 +108,7 @@ class _BarcodeState extends State<Barcode> {
 
                 await _ISBNSearch(barcodeValue);
 
-                Navigator.of(context).pop(); // 로딩 다이얼로그 닫기
+                Navigator.of(context).pop();
 
                 if (!mounted) return;
 
@@ -146,9 +134,10 @@ class _BarcodeState extends State<Barcode> {
 
                 if (_item != null) {
                   final item = _item!;
-                  final imageUrl = item['image'] ?? '';
-                  final title = item['title']?.replaceAll(RegExp(r'<[^>]*>|&[^;]+;'), ' ') ?? '제목 없음';
-                  final author = item['author']?.replaceAll(RegExp(r'<[^>]*>|&[^;]+;'), ' ') ?? '저자 없음';
+                  final imageUrl = item['thumbnail'] ?? '';
+                  final title = item['title'] ?? '제목 없음';
+                  final authorsList = item['authors'] as List<dynamic>? ?? [];
+                  final author = authorsList.join(', ');
 
                   final dialogResult = await showDialog<Map<String, dynamic>>(
                     context: context,

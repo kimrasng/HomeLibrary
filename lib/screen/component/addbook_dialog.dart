@@ -34,18 +34,16 @@ class _AddBookManuallyScreenState extends State<AddBookManuallyScreen> {
     });
 
     try {
-      final clientId = dotenv.env["CLIENT_ID"];
-      final clientSecret = dotenv.env["CLIENT_SECRET"];
-      final uri = Uri.parse('https://openapi.naver.com/v1/search/book.json?query=$query&display=10');
+      final restApiKey = dotenv.env["REST_API_KEY"];
+      final uri = Uri.parse('https://dapi.kakao.com/v3/search/book?query=$query&size=50');
       final res = await http.get(uri, headers: {
-        'X-Naver-Client-Id': clientId!,
-        'X-Naver-Client-Secret': clientSecret!
+        'Authorization': 'KakaoAK $restApiKey',
       });
 
       if (res.statusCode == 200) {
         final Map<String, dynamic> json = jsonDecode(utf8.decode(res.bodyBytes));
         setState(() {
-          _searchResults = json['items'] as List<dynamic>? ?? [];
+          _searchResults = json['documents'] as List<dynamic>? ?? [];
           if (_searchResults.isEmpty) {
             _error = '검색 결과가 없습니다.';
           }
@@ -67,9 +65,10 @@ class _AddBookManuallyScreenState extends State<AddBookManuallyScreen> {
   }
 
   void _showBookDetailsDialog(Map<String, dynamic> book) {
-    final title = book['title']?.replaceAll(RegExp(r'<[^>]*>|&[^;]+;'), ' ') ?? '제목 없음';
-    final author = book['author']?.replaceAll(RegExp(r'<[^>]*>|&[^;]+;'), ' ') ?? '저자 없음';
-    final imageUrl = book['image'] as String? ?? '';
+    final title = book['title'] ?? '제목 없음';
+    final authorsList = book['authors'] as List<dynamic>? ?? [];
+    final author = authorsList.join(', ');
+    final imageUrl = book['thumbnail'] as String? ?? '';
 
     showDialog(
       context: context,
@@ -93,7 +92,7 @@ class _AddBookManuallyScreenState extends State<AddBookManuallyScreen> {
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.of(dialogContext).pop(); // 다이얼로그 닫기
+                Navigator.of(dialogContext).pop();
               },
               child: const Text("취소"),
             ),
@@ -103,13 +102,13 @@ class _AddBookManuallyScreenState extends State<AddBookManuallyScreen> {
                   title: title,
                   author: author,
                   isbn: book['isbn'],
-                  coverUrl: book['image'],
-                  detailUrl: book['link'],
+                  coverUrl: book['thumbnail'],
+                  detailUrl: book['url'],
                 );
                 await _controller.addBook(widget.library.id, newBook);
 
-                Navigator.of(dialogContext).pop(); // 다이얼로그 닫기
-                Navigator.of(context).pop(true); // 이전 화면으로 돌아가기
+                Navigator.of(dialogContext).pop();
+                Navigator.of(context).pop(true);
               },
               child: const Text("추가"),
             ),
@@ -157,9 +156,10 @@ class _AddBookManuallyScreenState extends State<AddBookManuallyScreen> {
                           itemCount: _searchResults.length,
                           itemBuilder: (context, index) {
                             final book = _searchResults[index];
-                            final title = book['title']?.replaceAll(RegExp(r'<[^>]*>|&[^;]+;'), ' ') ?? '';
-                            final author = book['author']?.replaceAll(RegExp(r'<[^>]*>|&[^;]+;'), ' ') ?? '';
-                            final imageUrl = book['image'] as String? ?? '';
+                            final title = book['title'] ?? '';
+                            final authorsList = book['authors'] as List<dynamic>? ?? [];
+                            final author = authorsList.join(', ');
+                            final imageUrl = book['thumbnail'] as String? ?? '';
 
                             return ListTile(
                               leading: imageUrl.isNotEmpty

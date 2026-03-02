@@ -42,7 +42,6 @@ class _BookState extends State<Book> {
       setState(() {
         _isLoading = false;
       });
-      // Optionally, show an error message
     }
   }
 
@@ -79,12 +78,16 @@ class _BookState extends State<Book> {
                   MaterialPageRoute(builder: (context) => const Barcode()),
                 );
                 if (result != null) {
+                  // Kakao API 필드명에 맞게 수정
+                  final authorsList = result['authors'] as List<dynamic>? ?? [];
+                  final author = authorsList.join(', ');
+                  
                   final newBook = BookItemModel(
-                    title: result['title']?.replaceAll(RegExp(r'<[^>]*>|&[^;]+;'), ' ') ?? '제목 없음',
-                    author: result['author']?.replaceAll(RegExp(r'<[^>]*>|&[^;]+;'), ' ') ?? '저자 없음',
+                    title: result['title'] ?? '제목 없음',
+                    author: author,
                     isbn: result['isbn'],
-                    coverUrl: result['image'],
-                    detailUrl: result['link'],
+                    coverUrl: result['thumbnail'],
+                    detailUrl: result['url'],
                   );
                   await _controller.addBook(widget.library.id, newBook);
                   _loadBooks();
@@ -168,13 +171,13 @@ class _BookState extends State<Book> {
                   itemBuilder: (context, index) {
                     final book = _books[index];
                     return ListTile(
-                      leading: book.coverUrl != null
+                      leading: book.coverUrl != null && book.coverUrl!.isNotEmpty
                           ? Image.network(
                               book.coverUrl!,
                               fit: BoxFit.cover,
                               width: 50,
                             )
-                          : null,
+                          : const Icon(Icons.book, size: 50),
                       title: Text(book.title),
                       subtitle: Text(book.author),
                       onTap: () {

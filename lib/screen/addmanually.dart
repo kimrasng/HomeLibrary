@@ -3,16 +3,21 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:homelibrary/controller/controller.dart';
+import 'package:homelibrary/model/Library.dart';
 import 'package:http/http.dart' as http;
 
 class Addmanually extends StatefulWidget {
-  const Addmanually({super.key});
+  final LibraryModle library;
+
+  const Addmanually({super.key, required this.library});
 
   @override
   State<Addmanually> createState() => _AddmanuallyState();
 }
 
 class _AddmanuallyState extends State<Addmanually> {
+  final LibraryController _controller = LibraryController();
   List<dynamic>? _items;
   String _error = '';
   Timer? _debounce;
@@ -48,46 +53,38 @@ class _AddmanuallyState extends State<Addmanually> {
     });
 
     try {
-      final clientId = dotenv.env["CLIENT_ID"];
-      final clientSecret = dotenv.env["CLIENT_SECRET"];
+      final restApiKey = dotenv.env["REST_API_KEY"];
 
-      if (clientId == null || clientSecret == null) {
+      if (restApiKey == null) {
         setState(() {
           _error = 'API 키를 .env 파일에서 찾을 수 없습니다.';
         });
         return;
       }
 
-      final uri = Uri.parse('https://openapi.naver.com/v1/search/book.json?query=$text&display=50');
+      final uri = Uri.parse('https://dapi.kakao.com/v3/search/book?query=$text&size=50');
 
       final res = await http.get(uri, headers: {
-        'X-Naver-Client-Id': clientId,
-        'X-Naver-Client-Secret': clientSecret
+        'Authorization': 'KakaoAK $restApiKey',
       });
 
       if (res.statusCode == 200) {
-        try {
-          final Map<String, dynamic> json = jsonDecode(utf8.decode(res.bodyBytes));
+        final Map<String, dynamic> json = jsonDecode(utf8.decode(res.bodyBytes));
+        final items = json['documents'] as List<dynamic>?;
 
-          final items = json['items'] as List<dynamic>?;
-          if (json['total'] == 0 || items == null || items.isEmpty) {
-            setState(() {
-              _error = '책 정보를 찾을 수 없습니다.';
-            });
-            return;
-          }
-          
+        if (items == null || items.isEmpty) {
           setState(() {
-            _items = items;
+            _error = '책 정보를 찾을 수 없습니다.';
           });
-        } on FormatException {
-          setState(() {
-            _error = 'API 응답을 파싱하는데 실패했습니다. 응답: ${res.body}';
-          });
+          return;
         }
+        
+        setState(() {
+          _items = items;
+        });
       } else {
         setState(() {
-          _error = '서버 오류 : ${res.statusCode}\n${res.body}';
+          _error = '서버 오류 : ${res.statusCode}';
         });
       }
     } catch (e) {
@@ -99,6 +96,59 @@ class _AddmanuallyState extends State<Addmanually> {
         _isLoading = false;
       });
     }
+  }
+
+  void _showBookDetailsDialog(Map<String, dynamic> book) {
+    final title = book['title'] ?? '제목 없음';
+    final authorsList = book['authors'] as List<dynamic>? ?? [];
+    final author = authorsList.join(', ');
+    final imageUrl = book['thumbnail'] as String? ?? '';
+
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: const Text("책 정보"),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (imageUrl.isNotEmpty)
+                  Center(child: Image.network(imageUrl, height: 150, fit: BoxFit.contain)),
+                const SizedBox(height: 16),
+                Text('제목: $title', style: const TextStyle(fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                Text('저자: $author'),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text("취소"),
+            ),
+            TextButton(
+              onPressed: () async {
+                final newBook = BookItemModel(
+                  title: title,
+                  author: author,
+                  isbn: book['isbn'],
+                  coverUrl: book['thumbnail'],
+                  detailUrl: book['url'],
+                );
+                await _controller.addBook(widget.library.id, newBook);
+
+                if (!mounted) return;
+                Navigator.of(dialogContext).pop();
+                Navigator.of(context).pop(true);
+              },
+              child: const Text("추가"),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -120,6 +170,7 @@ class _AddmanuallyState extends State<Addmanually> {
               items: _items,
               error: _error,
               isLoading: _isLoading,
+              onTapItem: _showBookDetailsDialog,
             ),
           ),
         ],
@@ -132,11 +183,13 @@ class _AutoSearch extends StatelessWidget {
   final List<dynamic>? items;
   final String error;
   final bool isLoading;
+  final Function(Map<String, dynamic>) onTapItem;
 
   const _AutoSearch({
     required this.items,
     required this.error,
     required this.isLoading,
+    required this.onTapItem,
   });
 
   @override
@@ -166,14 +219,14 @@ class _AutoSearch extends StatelessWidget {
       itemCount: items!.length,
       itemBuilder: (context, index) {
         final item = items![index];
-        final title = item['title']?.replaceAll(RegExp(r'<[^>]*>|&[^;]+;'), '') ?? '제목 없음';
-        final imageUrl = item['image'];
-        final author = item['author']?.replaceAll(RegExp(r'<[^>]*>|&[^;]+;'), '').replaceAll('^', ', ') ?? '저자 없음';
-        final publisher = item['publisher']?.replaceAll(RegExp(r'<[^>]*>|&[^;]+;'), '') ?? '출판사 없음';
+        final title = item['title'] ?? '제목 없음';
+        final imageUrl = item['thumbnail'];
+        final authorsList = item['authors'] as List<dynamic>? ?? [];
+        final author = authorsList.join(', ');
+        final publisher = item['publisher'] ?? '출판사 없음';
 
         return InkWell(
-          onTap: () {
-          },
+          onTap: () => onTapItem(item),
           child: Padding(
             padding: const EdgeInsets.all(16.0),
             child: Row(
