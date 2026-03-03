@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:homelibrary/controller/controller.dart';
 import 'package:homelibrary/model/Library.dart';
 import 'package:homelibrary/screen/barcode.dart';
-import 'package:homelibrary/screen/component/addbook_dialog.dart';
+import 'package:homelibrary/screen/addmanually.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class Book extends StatefulWidget {
@@ -34,8 +34,12 @@ class _BookState extends State<Book> {
       final currentLibrary = libraries.firstWhere(
         (lib) => lib.id == widget.library.id,
       );
+      
+      final books = currentLibrary.books;
+      books.sort((a, b) => a.title.toLowerCase().compareTo(b.title.toLowerCase()));
+
       setState(() {
-        _books = currentLibrary.books;
+        _books = books;
         _isLoading = false;
       });
     } catch (e) {
@@ -61,7 +65,7 @@ class _BookState extends State<Book> {
                   context,
                   MaterialPageRoute(
                     builder: (context) =>
-                        AddBookManuallyScreen(library: widget.library),
+                        Addmanually(library: widget.library),
                   ),
                 );
                 if (result == true) {
@@ -75,21 +79,9 @@ class _BookState extends State<Book> {
                 Navigator.of(context).pop();
                 final result = await Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const Barcode()),
+                  MaterialPageRoute(builder: (context) => Barcode(library: widget.library)),
                 );
-                if (result != null) {
-                  // Kakao API 필드명에 맞게 수정
-                  final authorsList = result['authors'] as List<dynamic>? ?? [];
-                  final author = authorsList.join(', ');
-                  
-                  final newBook = BookItemModel(
-                    title: result['title'] ?? '제목 없음',
-                    author: author,
-                    isbn: result['isbn'],
-                    coverUrl: result['thumbnail'],
-                    detailUrl: result['url'],
-                  );
-                  await _controller.addBook(widget.library.id, newBook);
+                if (result == true) {
                   _loadBooks();
                 }
               },
@@ -124,7 +116,7 @@ class _BookState extends State<Book> {
                 if (book.detailUrl != null) {
                   final url = Uri.parse(book.detailUrl!);
                   if (await canLaunchUrl(url)) {
-                    await launchUrl(url);
+                    await launchUrl(url, mode: LaunchMode.externalApplication);
                   }
                 }
               },

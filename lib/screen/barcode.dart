@@ -4,18 +4,23 @@ import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
+import 'package:homelibrary/controller/controller.dart';
+import 'package:homelibrary/model/Library.dart';
 
 class Barcode extends StatefulWidget {
-  const Barcode({super.key});
+  final LibraryModle library;
+
+  const Barcode({super.key, required this.library});
 
   @override
   State<Barcode> createState() => _BarcodeState();
 }
 
 class _BarcodeState extends State<Barcode> {
-
+  final LibraryController _libraryController = LibraryController();
   Map<String, dynamic>? _item;
   String _error = '';
+  bool _isSuccess = false; // 책이 하나라도 추가되었는지 여부
 
   final MobileScannerController _controller = MobileScannerController();
 
@@ -83,7 +88,16 @@ class _BarcodeState extends State<Barcode> {
     );
 
     return Scaffold(
-      appBar: AppBar(title: const Text('바코드 스캔')),
+      appBar: AppBar(
+        title: const Text('바코드 스캔'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            // 나갈 때 책이 추가되었다면 true를 반환하여 목록 새로고침 유도
+            Navigator.of(context).pop(_isSuccess);
+          },
+        ),
+      ),
       body: Stack(
         children: [
           MobileScanner(
@@ -108,9 +122,8 @@ class _BarcodeState extends State<Barcode> {
 
                 await _ISBNSearch(barcodeValue);
 
-                Navigator.of(context).pop();
-
                 if (!mounted) return;
+                Navigator.of(context).pop(); // 로딩 닫기
 
                 if (_error.isNotEmpty) {
                   showDialog(
@@ -139,7 +152,7 @@ class _BarcodeState extends State<Barcode> {
                   final authorsList = item['authors'] as List<dynamic>? ?? [];
                   final author = authorsList.join(', ');
 
-                  final dialogResult = await showDialog<Map<String, dynamic>>(
+                  showDialog(
                     context: context,
                     barrierDismissible: false,
                     builder: (dialogContext) {
@@ -164,26 +177,40 @@ class _BarcodeState extends State<Barcode> {
                             child: const Text('아니요'),
                             onPressed: () {
                               Navigator.of(dialogContext).pop();
+                              _controller.start(); // 다시 스캔 시작
                             },
                           ),
                           TextButton(
                             child: const Text('네'),
-                            onPressed: () {
-                              Navigator.of(dialogContext).pop(item);
+                            onPressed: () async {
+                              // 책 정보를 모델로 변환
+                              final newBook = BookItemModel(
+                                title: title,
+                                author: author,
+                                isbn: item['isbn'],
+                                coverUrl: item['thumbnail'],
+                                detailUrl: item['url'],
+                              );
+                              
+                              // 서재에 책 추가
+                              await _libraryController.addBook(widget.library.id, newBook);
+                              _isSuccess = true;
+
+                              if (!mounted) return;
+                              Navigator.of(dialogContext).pop();
+                              
+                              // TODO: 나중에 설정값에 따라 바로 pop 할지 정할 수 있음
+                              // 현재는 연속 스캔을 위해 스캐너 다시 시작
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('책이 추가되었습니다.'), duration: Duration(seconds: 1)),
+                              );
+                              _controller.start(); 
                             },
                           ),
                         ],
                       );
                     },
                   );
-
-                  if (!mounted) return;
-
-                  if (dialogResult != null) {
-                    Navigator.of(context).pop(dialogResult);
-                  } else {
-                    _controller.start();
-                  }
                 }
               }
             },

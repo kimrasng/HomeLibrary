@@ -66,6 +66,8 @@ class _LibraryState extends State<Library> {
         }
 
         final libraries = snapshot.data!;
+        libraries.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+
         return ListView.builder(
           itemCount: libraries.length,
           itemBuilder: (context, index) {
