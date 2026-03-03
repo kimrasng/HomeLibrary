@@ -52,6 +52,7 @@ class _BookState extends State<Book> {
   void _showAddBookChoiceDialog() {
     showDialog(
       context: context,
+      barrierDismissible: true,
       builder: (context) => AlertDialog(
         title: const Text('책 추가 방법 선택'),
         content: Column(
@@ -95,6 +96,7 @@ class _BookState extends State<Book> {
   Future<void> _bookDetail(BookItemModel book) async {
     return showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (BuildContext dialogContext) {
         return AlertDialog(
           title: Text(book.title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
@@ -104,9 +106,9 @@ class _BookState extends State<Book> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 if (book.coverUrl != null && book.coverUrl!.isNotEmpty)
-                  Center(child: Image.network(book.coverUrl!, height: 150, fit: BoxFit.contain)),
+                Text(book.author, style: const TextStyle(fontWeight: FontWeight.normal)),
                 const SizedBox(height: 16),
-                Text(book.author, style: const TextStyle(fontStyle: FontStyle.italic)),
+                Center(child: Image.network(book.coverUrl!, height: 150, fit: BoxFit.contain)),
               ],
             ),
           ),

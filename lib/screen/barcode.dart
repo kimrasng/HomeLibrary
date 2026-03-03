@@ -47,13 +47,18 @@ class _BarcodeState extends State<Barcode> {
         return;
       }
 
-      final uri = Uri.parse('https://dapi.kakao.com/v3/search/book?query=$isbn&target=isbn');
-      final res = await http.get(uri, headers: {
-        'Authorization': 'KakaoAK $restApiKey',
-      });
-      
+      final uri = Uri.parse(
+        'https://dapi.kakao.com/v3/search/book?query=$isbn&target=isbn',
+      );
+      final res = await http.get(
+        uri,
+        headers: {'Authorization': 'KakaoAK $restApiKey'},
+      );
+
       if (res.statusCode == 200) {
-        final Map<String, dynamic> json = jsonDecode(utf8.decode(res.bodyBytes));
+        final Map<String, dynamic> json = jsonDecode(
+          utf8.decode(res.bodyBytes),
+        );
         final items = json['documents'] as List<dynamic>?;
 
         if (items == null || items.isEmpty) {
@@ -76,7 +81,6 @@ class _BarcodeState extends State<Barcode> {
         _error = '요청 실패 : $e';
       });
     }
-
   }
 
   @override
@@ -117,7 +121,8 @@ class _BarcodeState extends State<Barcode> {
                 showDialog(
                   context: context,
                   barrierDismissible: false,
-                  builder: (context) => const Center(child: CircularProgressIndicator()),
+                  builder: (context) =>
+                      const Center(child: CircularProgressIndicator()),
                 );
 
                 await _ISBNSearch(barcodeValue);
@@ -138,9 +143,9 @@ class _BarcodeState extends State<Barcode> {
                             _controller.start();
                           },
                           child: const Text('확인'),
-                        )
+                        ),
                       ],
-                    )
+                    ),
                   );
                   return;
                 }
@@ -156,58 +161,81 @@ class _BarcodeState extends State<Barcode> {
                     context: context,
                     barrierDismissible: false,
                     builder: (dialogContext) {
-                      return AlertDialog(
-                        title: const Text('이 책이 맞나요?'),
-                        content: SingleChildScrollView(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              if (imageUrl.isNotEmpty)
-                                Center(child: Image.network(imageUrl, height: 150, fit: BoxFit.contain)),
-                              const SizedBox(height: 16),
-                              Text('제목: $title', style: const TextStyle(fontWeight: FontWeight.bold)),
-                              const SizedBox(height: 8),
-                              Text('저자: $author'),
-                            ],
+                      // popScop로 감싸서 뒤로가기 버튼눌엇을때 _controller.start가 실행되도록
+                      return PopScope(
+                        onPopInvokedWithResult: (didPop, result){
+                          if (didPop) {_controller.start();}
+                        },
+                        child: AlertDialog(
+                          title: const Text('이 책이 맞나요?'),
+                          content: SingleChildScrollView(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                if (imageUrl.isNotEmpty)
+                                  Center(
+                                    child: Image.network(
+                                      imageUrl,
+                                      height: 150,
+                                      fit: BoxFit.contain,
+                                    ),
+                                  ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  '제목: $title',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text('저자: $author'),
+                              ],
+                            ),
                           ),
-                        ),
-                        actions: <Widget>[
-                          TextButton(
-                            child: const Text('아니요'),
-                            onPressed: () {
-                              Navigator.of(dialogContext).pop();
-                              _controller.start(); // 다시 스캔 시작
-                            },
-                          ),
-                          TextButton(
-                            child: const Text('네'),
-                            onPressed: () async {
-                              // 책 정보를 모델로 변환
-                              final newBook = BookItemModel(
-                                title: title,
-                                author: author,
-                                isbn: item['isbn'],
-                                coverUrl: item['thumbnail'],
-                                detailUrl: item['url'],
-                              );
-                              
-                              // 서재에 책 추가
-                              await _libraryController.addBook(widget.library.id, newBook);
-                              _isSuccess = true;
+                          actions: <Widget>[
+                            TextButton(
+                              child: const Text('아니요'),
+                              onPressed: () {
+                                Navigator.of(dialogContext).pop();
+                                _controller.start(); // 다시 스캔 시작
+                              },
+                            ),
+                            TextButton(
+                              child: const Text('네'),
+                              onPressed: () async {
+                                // 책 정보를 모델로 변환
+                                final newBook = BookItemModel(
+                                  title: title,
+                                  author: author,
+                                  isbn: item['isbn'],
+                                  coverUrl: item['thumbnail'],
+                                  detailUrl: item['url'],
+                                );
 
-                              if (!mounted) return;
-                              Navigator.of(dialogContext).pop();
-                              
-                              // TODO: 나중에 설정값에 따라 바로 pop 할지 정할 수 있음
-                              // 현재는 연속 스캔을 위해 스캐너 다시 시작
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('책이 추가되었습니다.'), duration: Duration(seconds: 1)),
-                              );
-                              _controller.start(); 
-                            },
-                          ),
-                        ],
+                                // 서재에 책 추가
+                                await _libraryController.addBook(
+                                  widget.library.id,
+                                  newBook,
+                                );
+                                _isSuccess = true;
+
+                                if (!mounted) return;
+                                Navigator.of(dialogContext).pop();
+
+                                // TODO: 나중에 설정값에 따라 바로 pop 할지 정할 수 있음
+                                // 현재는 연속 스캔을 위해 스캐너 다시 시작
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('책이 추가되었습니다.'),
+                                    duration: Duration(seconds: 1),
+                                  ),
+                                );
+                                _controller.start();
+                              },
+                            ),
+                          ],
+                        ),
                       );
                     },
                   );
@@ -215,9 +243,7 @@ class _BarcodeState extends State<Barcode> {
               }
             },
           ),
-          CustomPaint(
-            painter: ScannerOverlay(scanWindow),
-          ),
+          CustomPaint(painter: ScannerOverlay(scanWindow)),
         ],
       ),
     );
@@ -274,5 +300,4 @@ class ScannerOverlay extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) {
     return false;
   }
-
 }
