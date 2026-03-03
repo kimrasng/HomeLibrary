@@ -30,6 +30,8 @@ class NavigationExample extends StatefulWidget {
 class _NavigationExampleState extends State<NavigationExample> {
   int currentPageIndex = 1;
 
+  bool barcodeAutoAdd = false;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -59,7 +61,7 @@ class _NavigationExampleState extends State<NavigationExample> {
       body: <Widget>[
         Library(),
         Home(),
-        Settings()
+        Settings({barcodeAutoAdd}, barcodeAutoAdd: barcodeAutoAdd,)
       ][currentPageIndex],
     );
   }
