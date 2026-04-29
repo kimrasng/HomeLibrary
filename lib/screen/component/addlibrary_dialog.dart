@@ -3,7 +3,7 @@ import 'package:homelibrary/model/Library.dart';
 import 'package:homelibrary/controller/controller.dart';
 
 class AddlibraryDialog extends StatefulWidget {
-  final LibraryModle? library;
+  final LibraryModel? library;
 
   const AddlibraryDialog({super.key, this.library});
 
@@ -20,7 +20,8 @@ class _AddlibraryDialogState extends State<AddlibraryDialog> {
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.library?.name ?? '');
-    _locationController = TextEditingController(text: widget.library?.location ?? '');
+    _locationController =
+        TextEditingController(text: widget.library?.location ?? '');
   }
 
   Future<void> _addOrUpdateLibrary() async {
@@ -29,7 +30,7 @@ class _AddlibraryDialogState extends State<AddlibraryDialog> {
 
     if (name.isNotEmpty && location.isNotEmpty) {
       if (widget.library != null) {
-        final updatedLibrary = LibraryModle(
+        final updatedLibrary = LibraryModel(
           id: widget.library!.id,
           name: name,
           location: location,
@@ -37,7 +38,8 @@ class _AddlibraryDialogState extends State<AddlibraryDialog> {
         );
         await _controller.updateLibrary(updatedLibrary);
       } else {
-        final newLibrary = LibraryModle(name: name, location: location, books: []);
+        final newLibrary =
+            LibraryModel(name: name, location: location, books: []);
         await _controller.addLibrary(newLibrary);
       }
       Navigator.of(context).pop(true);
@@ -46,38 +48,44 @@ class _AddlibraryDialogState extends State<AddlibraryDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final isEditing = widget.library != null;
+
     return AlertDialog(
-      title: Text(widget.library == null ? "서재 추가" : "서재 수정"),
+      icon: Icon(isEditing ? Icons.edit : Icons.shelves),
+      title: Text(isEditing ? '서재 수정' : '서재 추가'),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           TextField(
             controller: _nameController,
             decoration: const InputDecoration(
-              labelText: "서재 이름",
+              labelText: '서재 이름',
               border: OutlineInputBorder(),
+              prefixIcon: Icon(Icons.bookmark),
             ),
+            textInputAction: TextInputAction.next,
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
           TextField(
             controller: _locationController,
             decoration: const InputDecoration(
-              labelText: "서재 위치",
+              labelText: '서재 위치',
               border: OutlineInputBorder(),
+              prefixIcon: Icon(Icons.location_on),
             ),
+            textInputAction: TextInputAction.done,
+            onSubmitted: (_) => _addOrUpdateLibrary(),
           ),
         ],
       ),
       actions: [
         TextButton(
-          onPressed: () {
-            Navigator.of(context).pop(false);
-          },
+          onPressed: () => Navigator.of(context).pop(false),
           child: const Text('취소'),
         ),
-        TextButton(
+        FilledButton(
           onPressed: _addOrUpdateLibrary,
-          child: Text(widget.library == null ? '추가' : '수정'),
+          child: Text(isEditing ? '수정' : '추가'),
         ),
       ],
     );

@@ -14,9 +14,26 @@ Future<void> main() async {
 class NavigationBarApp extends StatelessWidget {
   const NavigationBarApp({super.key});
 
+  static const _seed = Color(0xFF5B6ABF);
+
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(home: NavigationExample());
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(seedColor: _seed),
+      ),
+      darkTheme: ThemeData(
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: _seed,
+          brightness: Brightness.dark,
+        ),
+      ),
+      themeMode: ThemeMode.system,
+      home: const NavigationExample(),
+    );
   }
 }
 
@@ -30,7 +47,7 @@ class NavigationExample extends StatefulWidget {
 class _NavigationExampleState extends State<NavigationExample> {
   int currentPageIndex = 1;
 
-  bool barcodeAutoAdd = false;
+  final _pages = const <Widget>[Library(), Home(), Settings()];
 
   @override
   Widget build(BuildContext context) {
@@ -44,25 +61,23 @@ class _NavigationExampleState extends State<NavigationExample> {
         selectedIndex: currentPageIndex,
         destinations: const <Widget>[
           NavigationDestination(
-            icon: Icon(Icons.bookmarks_rounded),
+            icon: Icon(Icons.book_outlined),
+            selectedIcon: Icon(Icons.book_rounded),
             label: '서재',
           ),
           NavigationDestination(
-            selectedIcon: Icon(Icons.home),
             icon: Icon(Icons.home_outlined),
+            selectedIcon: Icon(Icons.home_rounded),
             label: '홈',
           ),
           NavigationDestination(
-            icon: Icon(Icons.settings),
+            icon: Icon(Icons.settings_outlined),
+            selectedIcon: Icon(Icons.settings_rounded),
             label: '설정',
           ),
         ],
       ),
-      body: <Widget>[
-        Library(),
-        Home(),
-        Settings({barcodeAutoAdd}, barcodeAutoAdd: barcodeAutoAdd,)
-      ][currentPageIndex],
+      body: _pages[currentPageIndex],
     );
   }
 }

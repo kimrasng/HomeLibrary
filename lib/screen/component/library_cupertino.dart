@@ -2,7 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:homelibrary/model/Library.dart';
 
 class LibraryCupertino {
-  static void showActionSheet(BuildContext context, LibraryModle library,
+  static void showActionSheet(BuildContext context, LibraryModel library,
       {required VoidCallback onDelete, required VoidCallback onRename}) {
     showCupertinoModalPopup(
       context: context,
