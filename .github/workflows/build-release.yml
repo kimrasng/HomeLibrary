@@ -8,71 +8,72 @@ on:
 permissions:
   contents: write
 
+env:
+  JAVA_VERSION: '17'
+  FLUTTER_CHANNEL: 'stable'
+
 jobs:
   build:
+    name: "\U0001F4E6 Build APK"
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      # ── Setup ──────────────────────────────────────────
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Extract version from tag
+      - name: Parse version from tag
         id: version
         run: |
           TAG="${GITHUB_REF#refs/tags/v}"
-          echo "version=$TAG" >> "$GITHUB_OUTPUT"
-          # versionCode: major * 1000 + minor (e.g. v2.3 -> 2003)
-          MAJOR=$(echo "$TAG" | cut -d. -f1)
-          MINOR=$(echo "$TAG" | cut -d. -f2)
-          VERSION_CODE=$((MAJOR * 1000 + MINOR))
-          echo "version_code=$VERSION_CODE" >> "$GITHUB_OUTPUT"
-          echo "Version: $TAG, VersionCode: $VERSION_CODE"
+          MAJOR="${TAG%%.*}"
+          MINOR="${TAG#*.}"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version_code=$((MAJOR * 1000 + MINOR))" >> "$GITHUB_OUTPUT"
+          echo "::notice::Version $TAG (code: $((MAJOR * 1000 + MINOR)))"
 
-      - name: Set up Java 17
+      - name: Set up Java ${{ env.JAVA_VERSION }}
         uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
-          java-version: '17'
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          channel: 'stable'
+          channel: ${{ env.FLUTTER_CHANNEL }}
 
-      - name: Create .env file
-        run: echo "${{ secrets.ENV_FILE }}" > .env
-
-      - name: Decode keystore
-        run: |
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/release-keystore.jks
-
-      - name: Create key.properties
+      # ── Secrets ────────────────────────────────────────
+      - name: Prepare signing & environment
         env:
+          ENV_FILE: ${{ secrets.ENV_FILE }}
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
         run: |
-          printf 'storePassword=%s\nkeyPassword=%s\nkeyAlias=%s\nstoreFile=release-keystore.jks\n' \
-            "$KEYSTORE_PASSWORD" "$KEY_PASSWORD" "$KEY_ALIAS" > android/key.properties
+          echo "$ENV_FILE" > .env
+          echo "$KEYSTORE_BASE64" | base64 --decode > android/app/release-keystore.jks
+          printf 'storePassword=%s\nkeyPassword=%s\nkeyAlias=%s\nstoreFile=release-keystore.jks\n' "$KEYSTORE_PASSWORD" "$KEY_PASSWORD" "$KEY_ALIAS" > android/key.properties
+          echo "::group::Verify signing files"
+          ls -la android/app/release-keystore.jks
+          cat android/key.properties | sed 's/=.*/=***/'
+          echo "::endgroup::"
 
+      # ── Build ──────────────────────────────────────────
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Build APK
+      - name: Build release APK
         run: |
           flutter build apk --release \
-            --build-name=${{ steps.version.outputs.version }} \
+            --build-name=${{ steps.version.outputs.tag }} \
             --build-number=${{ steps.version.outputs.version_code }}
 
-      - name: Rename APK
-        run: |
-          mv build/app/outputs/flutter-apk/app-release.apk \
-             build/app/outputs/flutter-apk/HomeLibrary-v${{ steps.version.outputs.version }}.apk
-
-      - name: Create GitHub Release
+      # ── Release ────────────────────────────────────────
+      - name: Upload to GitHub Releases
         uses: softprops/action-gh-release@v2
         with:
-          name: "HomeLibrary v${{ steps.version.outputs.version }}"
-          tag_name: "v${{ steps.version.outputs.version }}"
+          name: "HomeLibrary v${{ steps.version.outputs.tag }}"
           generate_release_notes: true
-          files: build/app/outputs/flutter-apk/HomeLibrary-v${{ steps.version.outputs.version }}.apk
+          files: build/app/outputs/flutter-apk/app-release.apk
