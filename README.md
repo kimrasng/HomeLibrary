@@ -2,9 +2,9 @@
 
 # HomeLibrary
 
-**내가 가진 책과 독서 기록을 한곳에서 관리하는 나만의 모바일 서재**
+**Your personal mobile library for managing books and reading records in one place**
 
-서재별 도서 관리 · ISBN 바코드 스캔 · 카카오 도서 검색 · 읽기 상태와 평점 · 한줄평
+Organize books by library · Scan ISBN barcodes · Search with Kakao Books · Track reading status and ratings · Write short reviews
 
 ![Flutter](https://img.shields.io/badge/Flutter-02569B?logo=flutter&logoColor=white)
 ![Dart](https://img.shields.io/badge/Dart-%5E3.10.7-0175C2?logo=dart&logoColor=white)
@@ -12,94 +12,96 @@
 ![iOS](https://img.shields.io/badge/iOS-000000?logo=apple&logoColor=white)
 ![Material 3](https://img.shields.io/badge/Material-3-6750A4?logo=materialdesign&logoColor=white)
 
-[주요 기능](#주요-기능) · [아키텍처](#아키텍처) · [빠른 시작](#빠른-시작) · [사용 방법](#사용-방법) · [빌드와 릴리스](#빌드와-릴리스) · [개발](#개발)
+**English** | [한국어](README.ko.md)
+
+[Features](#features) · [Architecture](#architecture) · [Quick Start](#quick-start) · [Usage](#usage) · [Build and Release](#build-and-release) · [Development](#development)
 
 </div>
 
-## 한눈에 보기
+## At a Glance
 
-| 기능 | 설명 |
+| Feature | Description |
 |---|---|
-| **공간별 서재** | 서재 이름과 위치를 지정하고, 서재마다 책을 나누어 보관합니다. |
-| **검색으로 책 추가** | 제목·저자·ISBN으로 카카오 도서 검색 결과를 조회하고 서재에 추가합니다. |
-| **바코드로 책 추가** | 카메라로 ISBN 바코드를 스캔해 도서 정보를 불러옵니다. 같은 서재의 ISBN 중복도 확인합니다. |
-| **독서 기록** | 읽기 상태, 별점 1~5점, 한줄평을 책마다 기록합니다. |
-| **홈 대시보드** | 전체 도서 수, 읽기 상태별 수량, 최근 추가한 책 5권, 서재별 현황을 확인합니다. |
-| **두 가지 책 보기** | 표지 중심의 격자 보기와 정보 중심의 목록 보기를 전환합니다. |
-| **기기 내 저장** | 서재와 독서 기록을 SharedPreferences에 저장합니다. 별도 계정이나 자체 백엔드는 없습니다. |
-| **시스템 테마 연동** | Material 3 기반으로 기기의 라이트·다크 모드를 따릅니다. |
+| **Libraries by location** | Give each library a name and location, and organize your books into separate libraries. |
+| **Add books by search** | Search Kakao Books by title, author, or ISBN and add results to a library. |
+| **Add books by barcode** | Scan an ISBN barcode with your camera to look up book details. Check for duplicate ISBNs in the same library. |
+| **Reading records** | Record reading status, a 1–5 star rating, and a short review for each book. |
+| **Home dashboard** | View total book counts, counts by reading status, the five most recently added books, and a summary of each library. |
+| **Two book views** | Switch between a cover-focused grid and an information-focused list. |
+| **On-device storage** | Libraries and reading records are stored in SharedPreferences. No account or dedicated backend is required. |
+| **System theme** | The Material 3 interface follows your device's light or dark mode. |
 
-## 주요 기능
+## Features
 
-### 서재와 도서 관리
+### Library and Book Management
 
-- 서재를 만들 때 **이름과 위치**를 입력합니다.
-- 서재 정보를 수정하거나 서재를 삭제할 수 있습니다.
-- 서재 목록은 이름순, 서재 안의 책은 제목순으로 표시합니다.
-- 도서 검색 결과의 표지, 저자, 출판사, ISBN, 책 소개와 상세 페이지 주소를 저장합니다.
-- 책 상세 화면에서 정보를 확인하고, **자세히 보기**로 외부 상세 페이지를 열거나 책을 삭제합니다.
+- Enter a **name and location** when creating a library.
+- Edit library details or delete a library.
+- Libraries are sorted by name, and books within a library are sorted by title.
+- Save the cover, author, publisher, ISBN, description, and detail page URL from book search results.
+- View book information on the detail screen, open the external detail page with **View details**, or delete the book.
 
-### 도서 등록
+### Adding Books
 
-| 방법 | 흐름 |
+| Method | Flow |
 |---|---|
-| 검색해서 추가 | 검색어 입력 → 카카오 도서 검색 → 결과 선택 → 정보 확인 → 서재에 추가 |
-| 바코드로 추가 | 카메라 권한 허용 → ISBN 스캔 → 카카오 ISBN 검색 → 중복 확인 → 정보 확인 후 추가 |
+| Add by search | Enter a query → Search Kakao Books → Select a result → Review details → Add to a library |
+| Add by barcode | Allow camera access → Scan an ISBN → Search Kakao by ISBN → Check for duplicates → Review details and add |
 
-검색과 바코드 조회에는 인터넷 연결과 **카카오 REST API 키**가 필요합니다. 저장된 서재와 독서 기록은 기기에서 불러오며, 표지 이미지는 네트워크로 가져옵니다.
+Search and barcode lookups require an internet connection and a **Kakao REST API key**. Saved libraries and reading records are loaded from your device, while cover images are fetched over the network.
 
-### 독서 기록
+### Reading Records
 
-| 항목 | 지원 내용 |
+| Field | Supported behavior |
 |---|---|
-| 읽기 상태 | 읽고 싶은 · 읽고 있는 · 다 읽은 · 중단한 |
-| 평점 | 별점 1~5점. 선택한 별을 다시 누르면 평점을 해제합니다. |
-| 한줄평 | 책에 대한 짧은 메모. 입력 완료 또는 입력창 바깥을 누르면 저장합니다. |
-| 홈 통계 | 읽기 상태별 도서 수와 서재별 보유 도서 수를 집계합니다. |
+| Reading status | Want to read · Reading · Finished · Abandoned |
+| Rating | 1–5 stars. Tap the selected star again to clear the rating. |
+| Short review | A brief note about the book. Saved when you finish editing or tap outside the input field. |
+| Home statistics | Book counts by reading status and the number of books in each library. |
 
-## 아키텍처
+## Architecture
 
-Flutter 앱이 카카오 도서 검색 API에 직접 요청하고, 사용자가 추가한 책과 독서 기록은 기기 내에 저장합니다.
+The Flutter app calls the Kakao Book Search API directly. Books added by the user and their reading records are stored on the device.
 
 ```mermaid
 flowchart LR
-    User["사용자"] --> UI["Flutter 화면<br/>홈 · 서재 · 책 상세 · 설정"]
-    Camera["카메라<br/>mobile_scanner"] --> Scan["ISBN 바코드 검색"]
-    UI --> Search["제목 · 저자 · ISBN 검색"]
-    Search --> Kakao["카카오 도서 검색 API"]
+    User["User"] --> UI["Flutter screens<br/>Home · Libraries · Book details · Settings"]
+    Camera["Camera<br/>mobile_scanner"] --> Scan["ISBN barcode lookup"]
+    UI --> Search["Title · Author · ISBN search"]
+    Search --> Kakao["Kakao Book Search API"]
     Scan --> Kakao
-    Kakao --> Add["도서 정보 확인 및 추가"]
+    Kakao --> Add["Review and add book"]
     Add --> Controller["LibraryController"]
     UI --> Controller
-    Controller <--> Storage[("SharedPreferences<br/>서재 · 도서 JSON")]
+    Controller <--> Storage[("SharedPreferences<br/>Libraries · Books JSON")]
     Env[".env<br/>REST_API_KEY"] -.-> Search
     Env -.-> Scan
 ```
 
-### 구성 요소
+### Components
 
-| 구성 요소 | 역할 | 기술 |
+| Component | Responsibility | Technology |
 |---|---|---|
-| `lib/main.dart` | 환경 변수 로드, 테마, 하단 탭 내비게이션 | Flutter, Material 3, flutter_dotenv |
-| `lib/screen/` | 대시보드, 서재, 도서 검색·스캔, 상세 기록, 설정 | Flutter Widgets |
-| `lib/model/Library.dart` | 서재·도서 모델, 읽기 상태, JSON 직렬화 | Dart |
-| `lib/controller/controller.dart` | 서재와 도서의 저장·조회·수정·삭제 | shared_preferences |
-| 도서 검색 | 검색어 및 ISBN으로 도서 정보 조회 | Kakao API, http |
-| 바코드 스캔 | 카메라로 바코드 인식 | mobile_scanner |
-| 외부 상세 페이지 | 도서 상세 URL 열기 | url_launcher |
+| `lib/main.dart` | Environment loading, theme, and bottom tab navigation | Flutter, Material 3, flutter_dotenv |
+| `lib/screen/` | Dashboard, libraries, book search and scanning, reading details, and settings | Flutter Widgets |
+| `lib/model/Library.dart` | Library and book models, reading status, and JSON serialization | Dart |
+| `lib/controller/controller.dart` | Create, read, update, and delete libraries and books | shared_preferences |
+| Book search | Look up book information by query or ISBN | Kakao API, http |
+| Barcode scanning | Recognize barcodes with the camera | mobile_scanner |
+| External detail pages | Open book detail URLs | url_launcher |
 
-## 빠른 시작
+## Quick Start
 
-### 준비 사항
+### Prerequisites
 
-- [Flutter SDK](https://docs.flutter.dev/install): 포함된 Dart SDK가 `^3.10.7` 조건을 만족하는 버전
-- Android 개발: Android SDK, JDK 17, 에뮬레이터 또는 실제 기기
-- iOS 개발: macOS, Xcode, CocoaPods, 시뮬레이터 또는 실제 기기
-- [Kakao Developers](https://developers.kakao.com/)에서 발급한 REST API 키
+- [Flutter SDK](https://docs.flutter.dev/install) with a bundled Dart SDK that satisfies `^3.10.7`
+- Android development: Android SDK, JDK 17, and an emulator or physical device
+- iOS development: macOS, Xcode, CocoaPods, and a simulator or physical device
+- A REST API key issued through [Kakao Developers](https://developers.kakao.com/)
 
-먼저 `flutter doctor`로 대상 플랫폼의 개발 환경을 확인하세요.
+Run `flutter doctor` first to check the development environment for your target platform.
 
-### 설치와 실행
+### Install and Run
 
 ```bash
 git clone https://github.com/kimrasng/HomeLibrary.git
@@ -107,7 +109,7 @@ cd HomeLibrary
 cp .env.example .env
 ```
 
-프로젝트 루트의 `.env`를 열고 REST API 키를 입력합니다.
+Open `.env` in the project root and enter your REST API key.
 
 ```dotenv
 REST_API_KEY=your_kakao_rest_api_key_here
@@ -119,127 +121,129 @@ flutter devices
 flutter run
 ```
 
-기기가 여러 대 연결되어 있다면 `flutter run -d <DEVICE_ID>`로 실행 대상을 지정합니다.
+If multiple devices are connected, select one with `flutter run -d <DEVICE_ID>`.
 
 > [!NOTE]
-> 앱은 시작할 때 `.env`를 읽으므로 실행 전에 파일을 만들어야 합니다. 카카오 **REST API 키**를 사용하며, JavaScript 키나 네이티브 앱 키를 넣지 않습니다. `.env`는 Git에서 제외되어 있습니다.
+> The app loads `.env` at startup, so create the file before running it. Use a Kakao **REST API key**, not a JavaScript key or native app key. `.env` is excluded from Git.
 
-## 사용 방법
+## Usage
 
-1. **서재** 탭에서 오른쪽 위 `+`를 눌러 서재 이름과 위치를 입력합니다.
-2. 만든 서재를 열고 `+`에서 **검색해서 추가** 또는 **바코드로 추가**를 선택합니다.
-3. 검색하거나 스캔한 책의 정보를 확인하고 **추가**를 누릅니다.
-4. 책을 눌러 상세 화면에서 읽기 상태, 평점, 한줄평을 기록합니다.
-5. **홈**에서 독서 현황을 확인합니다. 기록이 바로 반영되지 않으면 화면을 아래로 당겨 새로고침합니다.
+The steps below use English translations of the app's Korean interface labels.
+
+1. In the **Libraries** tab, tap `+` in the upper-right corner and enter a library name and location.
+2. Open the library, tap `+`, and choose **Add by search** or **Add by barcode**.
+3. Review the details of the book you found or scanned, then tap **Add**.
+4. Tap a book to record its reading status, rating, and short review on the detail screen.
+5. Check your reading overview on **Home**. Pull down to refresh if your records are not reflected immediately.
 
 <details>
-<summary><b>데이터 저장과 현재 지원 범위</b></summary>
+<summary><b>Data storage and current scope</b></summary>
 
-- 서재와 도서는 SharedPreferences의 `libraries` 키에 JSON으로 저장됩니다.
-- 앱 내 클라우드 동기화, 계정 로그인, 백업·복원 기능은 구현되어 있지 않습니다.
-- **검색해서 추가**는 검색 API 결과에서 책을 고르는 기능입니다. 도서 정보를 직접 작성하는 입력 폼은 없습니다.
-- 설정에 **바코드 자동 추가** 스위치가 있으나, 현재 스캔 흐름은 해당 설정을 읽지 않아 확인 후 추가 방식으로 동작합니다.
-- Android와 iOS 프로젝트가 포함되어 있으며, 자동 릴리스 워크플로는 Android APK를 대상으로 합니다.
+- Libraries and books are stored as JSON under the `libraries` key in SharedPreferences.
+- In-app cloud sync, account login, and backup or restore are not implemented.
+- **Add by search** lets you choose a book from search API results. There is no form for entering book details manually.
+- Settings includes an **Automatically add scanned books** switch, but the current scan flow does not read this setting and still requires confirmation before adding a book.
+- Android and iOS projects are included. The automated release workflow targets Android APKs.
 
 </details>
 
-## 빌드와 릴리스
+## Build and Release
 
 ### Android APK
 
-`.env` 설정과 의존성 설치를 마친 후 실행합니다.
+After configuring `.env` and installing dependencies, run:
 
 ```bash
 flutter build apk --release
 ```
 
-결과 파일은 `build/app/outputs/flutter-apk/app-release.apk`입니다.
+The output file is `build/app/outputs/flutter-apk/app-release.apk`.
 
-로컬에서 `android/key.properties`가 있으면 해당 릴리스 서명 설정을 사용하고, 없으면 디버그 키로 서명합니다. 배포용 서명 설정은 `android/app/build.gradle.kts`에서 확인할 수 있습니다.
+Local builds use the release signing configuration in `android/key.properties` if the file exists; otherwise, they are signed with the debug key. See `android/app/build.gradle.kts` for the distribution signing configuration.
 
 ### GitHub Actions
 
-[Build & Release APK](.github/workflows/build-release.yml) 워크플로는 `v*.*` 패턴의 태그가 푸시되면 실행됩니다. 현재 버전 파싱에 맞춰 `v1.0`처럼 **두 자리 버전 태그**를 사용합니다.
+The [Build & Release APK](.github/workflows/build-release.yml) workflow runs when a tag matching `v*.*` is pushed. Use a **two-component version tag**, such as `v1.0`, to match the current version parser.
 
-| 단계 | 내용 |
+| Stage | Description |
 |---|---|
-| 환경 준비 | Java 17과 Flutter stable 설치 |
-| 설정 복원 | GitHub Secrets에서 `.env`, 키스토어, 서명 속성 생성 |
-| 빌드 | `flutter pub get` 후 릴리스 APK 빌드 |
-| 배포 | GitHub Release를 생성하고 `app-release.apk` 첨부 |
+| Environment setup | Install Java 17 and Flutter stable |
+| Configuration restore | Create `.env`, the keystore, and signing properties from GitHub Secrets |
+| Build | Run `flutter pub get` and build a release APK |
+| Publish | Create a GitHub Release and attach `app-release.apk` |
 
-저장소의 Actions Secrets에 다음 값을 설정해야 합니다.
+Configure the following Actions Secrets in the repository:
 
-| Secret | 내용 |
+| Secret | Description |
 |---|---|
-| `ENV_FILE` | `REST_API_KEY=...`를 포함한 `.env` 전체 내용 |
-| `KEYSTORE_BASE64` | 릴리스 키스토어 파일을 Base64로 인코딩한 값 |
-| `KEYSTORE_PASSWORD` | 키스토어 비밀번호 |
-| `KEY_PASSWORD` | 서명 키 비밀번호 |
-| `KEY_ALIAS` | 서명 키 별칭 |
+| `ENV_FILE` | The full contents of `.env`, including `REST_API_KEY=...` |
+| `KEYSTORE_BASE64` | The release keystore file encoded as Base64 |
+| `KEYSTORE_PASSWORD` | Keystore password |
+| `KEY_PASSWORD` | Signing key password |
+| `KEY_ALIAS` | Signing key alias |
 
-## 개발
+## Development
 
 ```text
 HomeLibrary/
 ├── lib/
-│   ├── main.dart                 앱 진입점, 테마, 탭 내비게이션
+│   ├── main.dart                 App entry point, theme, and tab navigation
 │   ├── controller/
-│   │   └── controller.dart       서재·도서 CRUD와 로컬 저장
+│   │   └── controller.dart       Library and book CRUD and local storage
 │   ├── model/
-│   │   └── Library.dart          서재·도서 모델과 읽기 상태
+│   │   └── Library.dart          Library and book models and reading status
 │   └── screen/
-│       ├── Home.dart             독서 대시보드
-│       ├── Library.dart          서재 목록
-│       ├── book.dart             서재 내 도서 목록
-│       ├── book_detail.dart      도서 상세와 독서 기록
-│       ├── addmanually.dart      카카오 도서 검색
-│       ├── barcode.dart          ISBN 바코드 스캔
-│       ├── Settings.dart         앱 설정
-│       └── component/            서재 추가·편집 UI
-├── android/                      Android 프로젝트와 서명 설정
-├── ios/                          iOS 프로젝트
-├── .github/workflows/            APK 빌드·릴리스 자동화
-├── .env.example                  환경 변수 예시
-└── pubspec.yaml                  패키지와 에셋 설정
+│       ├── Home.dart             Reading dashboard
+│       ├── Library.dart          Library list
+│       ├── book.dart             Books in a library
+│       ├── book_detail.dart      Book details and reading records
+│       ├── addmanually.dart      Kakao book search
+│       ├── barcode.dart          ISBN barcode scanning
+│       ├── Settings.dart         App settings
+│       └── component/            Library creation and editing UI
+├── android/                      Android project and signing configuration
+├── ios/                          iOS project
+├── .github/workflows/            APK build and release automation
+├── .env.example                  Example environment variables
+└── pubspec.yaml                  Package and asset configuration
 ```
 
 ```bash
-flutter pub get       # 의존성 설치
-flutter analyze       # 정적 분석
-flutter run           # 개발 실행
+flutter pub get       # Install dependencies
+flutter analyze       # Run static analysis
+flutter run           # Run for development
 ```
 
-현재 저장소에는 Dart/Flutter 테스트 파일이 없습니다.
+The repository currently has no Dart or Flutter test files.
 
-## 문제 해결
+## Troubleshooting
 
 <details>
-<summary><b>시작할 때 .env 파일을 찾지 못해요</b></summary>
+<summary><b>The .env file cannot be found at startup</b></summary>
 
-프로젝트 루트에서 `.env.example`을 `.env`로 복사했는지 확인하세요. `pubspec.yaml`에 `.env`가 에셋으로 등록되어 있으며, `lib/main.dart`에서 앱 실행 전에 로드합니다.
+Make sure you copied `.env.example` to `.env` in the project root. `.env` is registered as an asset in `pubspec.yaml` and loaded in `lib/main.dart` before the app starts.
 
 </details>
 
 <details>
-<summary><b>책 검색이나 ISBN 조회에 실패해요</b></summary>
+<summary><b>Book search or ISBN lookup fails</b></summary>
 
-인터넷 연결과 `.env`의 `REST_API_KEY` 값을 확인하세요. 요청은 `Authorization: KakaoAK ...` 헤더로 카카오 도서 검색 API에 전송됩니다. 키를 변경했다면 앱을 완전히 다시 실행하세요.
+Check your internet connection and the `REST_API_KEY` value in `.env`. Requests are sent to the Kakao Book Search API with the `Authorization: KakaoAK ...` header. Restart the app completely after changing the key.
 
-Android 릴리스 빌드에서만 통신이 실패한다면 `android/app/src/main/AndroidManifest.xml`의 `android.permission.INTERNET` 선언을 확인하세요. 현재 저장소에는 해당 권한이 debug/profile 매니페스트에만 선언되어 있습니다.
-
-</details>
-
-<details>
-<summary><b>바코드를 스캔할 수 없어요</b></summary>
-
-기기 설정에서 앱의 카메라 접근 권한을 확인하고, 실제 책의 ISBN 바코드를 스캔하세요. 인식한 ISBN의 도서 정보를 조회하려면 인터넷 연결도 필요합니다.
+If networking fails only in Android release builds, check the `android.permission.INTERNET` declaration in `android/app/src/main/AndroidManifest.xml`. In the current repository, this permission is declared only in the debug and profile manifests.
 
 </details>
 
 <details>
-<summary><b>책을 추가했는데 홈의 수량이 바뀌지 않아요</b></summary>
+<summary><b>Barcode scanning does not work</b></summary>
 
-홈 화면을 아래로 당겨 새로고침하세요. 저장된 서재를 다시 읽어 도서 수와 읽기 상태별 통계를 계산합니다.
+Check the app's camera permission in your device settings and scan the ISBN barcode on a physical book. An internet connection is also required to look up book details for the scanned ISBN.
+
+</details>
+
+<details>
+<summary><b>The Home count does not change after adding a book</b></summary>
+
+Pull down on the Home screen to refresh. The app reloads saved libraries and recalculates book counts and reading status statistics.
 
 </details>
